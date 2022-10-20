@@ -1,5 +1,12 @@
 Ground - 8, 22
 VCC - 7
+Clock - 8, 10
+
 Speaker - DP11 - MC17
-FSR - 
-Button - 
+FSR - DP8 - MC14
+Button - DP7 - MC13
+Accelerometer - AI5, AI4 - MC27, MC28
+Start - DP19 - MC19
+Green LED - DP2 - MC4
+Red LED - DP4 - MC6
+
