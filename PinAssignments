@@ -6,7 +6,7 @@ Speaker - DP11 - MC17
 FSR - DP8 - MC14
 Button(task) - DP7 - MC13
 Button(game on/off) - reset - MC1
-Accelerometer - AI5, AI4 - MC27, MC28
+Accelerometer - AI5, AI4 - MC27, MC28  (28-SCL, 27-SDA)
 Start - DP19 - MC19
 Green LED - DP2 - MC4
 Red LED - DP4 - MC6
