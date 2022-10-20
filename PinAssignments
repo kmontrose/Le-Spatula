@@ -4,7 +4,8 @@ Clock - 8, 10
 
 Speaker - DP11 - MC17
 FSR - DP8 - MC14
-Button - DP7 - MC13
+Button(task) - DP7 - MC13
+Button(game on/off) - reset - MC1
 Accelerometer - AI5, AI4 - MC27, MC28
 Start - DP19 - MC19
 Green LED - DP2 - MC4
