@@ -1,296 +1,561 @@
-//#includes for playing audio from sd
-#include "SD.h"
-#define SD_ChipSelectPin 4
-#include "TMRpcm.h"
-#include "SPI.h"
+// h file for playing audio and reading accelerometer
 
-// (All pins that i "assigned" are all placeholders/subject to change) - will
+#include <PCM.h>
 
-inc count = 0;
-int fsrAnalogPin = 0;
-int redLED = 1;
-int greenLED = 2;
-int powerpin = 3;
-const int maxtime = 60000;
+#include <Wire.h>
+#include <Adafruit_MMA8451.h>
+#include <Adafruit_Sensor.h>
 
-//set pins for accelerometer
-const int xInput = A4;
-const int yInput = A5;
-const int zInput = A6;
+Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
-//set pin to read button press
-int handleSw = A7;
 
-//variable for use with playing audio from speaker
-TMRpcm tmrpcm;
+int maxtime = 6000; //starts at 1 min max timer
+
+int count = 0; // score variable
+
+//int16_t raw_x, raw_y, raw_z; // variables for accelerometer raw data
+
+  
+
+
+
+//press it function  (returns 1 for success and 0 for failure)
+
+int pressIt(){
+
+//test code///////////////////////
+ digitalWrite(4, HIGH);
+
+                 delay(100);
+
+                 digitalWrite(4, LOW);
+///////////////////////////
+
+       int success = 1;
+
+       
+
+       
+
+       //Begin countdown
+       unsigned long tstart = millis();
+
+      
+
+       //calculate how much time has passed
+
+       //unsigned long tend = millis();
+
+      // unsigned long time = tend - tstart;
+
+  
+  unsigned long time = 0;
+  unsigned long tend = 0;
+
+       while(time < maxtime){  //wait for fsr value to change until time is up
+
+      
+
+      //calculate how much time has passed
+       tend = millis();
+
+       time = tend - tstart;
+
+
+
+               int fsrReading = 0;
+
+               while(fsrReading == 0 && time<maxtime){ //read fsr pin until press is detected
+                //calculate how much time has passed
+              tend = millis();
+
+              time = tend - tstart;
+              fsrReading = digitalRead(8);
+
+                              }
+
+              
+
+               //recalculate how much time has passed
+
+               tend = millis();
+
+        time = tend - tstart;
+
+              
+
+               if(fsrReading == 1 && time < maxtime){  //if flex sensor reads good flex and timer is not up: success
+
+          //Turn green LED on
+
+          digitalWrite(2, HIGH);
+
+                 delay(100);
+
+                 digitalWrite(2, LOW);
+
+           delay(500);
+          return success;
+
+       }
+
+       else if(time >= maxtime){ //failure
+
+          digitalWrite(4, HIGH);
+
+                 delay(100);
+
+                 digitalWrite(4, LOW);
+
+                 success = 0;
+
+           delay(500);
+          return success;
+
+       }
+
+     } 
+
+}
+
+ 
+
+//flip it function (returns 1 for success and 0 for failure)
+
+int flipIt(){
+
+uint8_t startpos = mma.getOrientation();
+
+  //test code/////////////////
+  digitalWrite(2, HIGH);
+
+                 delay(100);
+
+                 digitalWrite(2, LOW);
+
+                 delay(500);
+  /////////////////////////////
+
+    int success = 1;
+
+    
+
+   
+
+    //Begin countdown
+
+    unsigned long tstart = millis();
+
+    unsigned long tend = millis();
+
+    unsigned long time = tend - tstart;
+
+
+
+
+
+    while(time < maxtime){
+
+        //read accelerometer to detect jerking motion
+
+       //int raw_x = mma.x;
+       //int raw_y = mma.x;
+       //int raw_z = mma.z;
+
+
+        //int avg = (abs(raw_x) + abs(raw_y) + abs(raw_z))/3;
+
+        uint8_t pos = mma.getOrientation();
+
+        //recalculate how much time has passed
+
+        tend = millis();
+
+        time = tend - tstart;
+
+   
+
+        if(pos != startpos){ //if accelerometer detects a succesful jerk and time is not up: success
+
+            digitalWrite(2, HIGH); // green led high
+
+                   delay(100);
+
+                   digitalWrite(2, LOW); // green led off
+
+             delay(500);
+            return success;
+
+        }
+
+        else if(time >= maxtime){ //failure
+
+            digitalWrite(4, HIGH); // red led on
+
+                   delay(100);
+
+                   digitalWrite(4, LOW); // red led off
+
+            success = 0;
+
+             delay(500);
+            return success;
+
+        } 
+
+ }
+
+}
+
+ 
+
+//firmly grasp it function (returns 1 for success and 0 for failure)
+
+int firmlyGraspIt(){
+
+
+//test/////////////////////////////////////////////
+  digitalWrite(2, HIGH);
+  digitalWrite(4, HIGH);
+
+                 delay(100);
+
+                 digitalWrite(2, LOW);
+                 digitalWrite(4, LOW);
+  //////////////////////////////////////////////////
+
+    int success = 1;
+
+
+ 
+
+    //Begin countdown
+
+    unsigned long tstart = millis();
+
+ 
+
+    unsigned long tend = millis();
+
+    unsigned long time = tend - tstart;
+
+ 
+
+    while(time < maxtime){
+
+        //read state of button
+
+        int buttonState;
+
+        buttonState = digitalRead(7);
+
+       
+
+               //recalculate how much time has passed
+
+        tend = millis();
+
+        time = tend - tstart;
+
+       
+
+        if(buttonState == HIGH && time < maxtime){ //if handle is firmly grasped and time is not up: success
+
+            digitalWrite(2, HIGH); // green led on
+
+                   delay(100);
+
+                   digitalWrite(2, LOW); // green led off
+
+             delay(500);
+            return success;
+
+        }
+    }
+
+
+        if(time >= maxtime){ //failure
+
+            digitalWrite(4, HIGH); // red led on
+
+                   delay(100);
+
+                   digitalWrite(4, LOW); // red led off
+
+            success = 0;
+
+
+             delay(500);
+            return success;
+        }
+
+    
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void setup(){
 
-  //also need to include setup for declaring if pins are input/output etc...
-  XXXXXXXXXXXXXXXXXXXX
 
-  //setup for playing audio clips
-  tmrpcm.speakerPin = 9;
-  Serial.begin(9600);
-  if (!SD.begin(SD_ChipSelectPin)) {
-  Serial.println("SD fail");
-  return;
+
+
+
+  
+
+  //Serial.begin(9600);
+
+ 
+
+  //set pins
+
+  pinMode(2, OUTPUT); // green led
+
+  pinMode(4, OUTPUT); // red led
+
+  pinMode(8, INPUT); // FSR
+
+  pinMode(7, INPUT); // firmly grasp it button
+
+  pinMode(13, INPUT); // start button
+
+  pinMode(12, OUTPUT); //sound for press it
+  pinMode(5, OUTPUT);  //sound for flip it
+  pinMode(6, OUTPUT); //sound for grasp it
+ 
+ digitalWrite(12, HIGH);  //keep audio pins high as default
+ digitalWrite(5, HIGH);
+ digitalWrite(6, HIGH);
+
+ 
+//test/////////////////////////////////////////////
+  digitalWrite(2, HIGH);
+  digitalWrite(4, HIGH);
+
+                 delay(500);
+
+                 digitalWrite(2, LOW);
+                 digitalWrite(4, LOW);
+
+                 delay(100);
+  //////////////////////////////////////////////////
+  //test/////////////////////////////////////////////
+  digitalWrite(2, HIGH);
+  digitalWrite(4, HIGH);
+
+                 delay(500);
+
+                 digitalWrite(2, LOW);
+                 digitalWrite(4, LOW);
+
+                 delay(690);
+  //////////////////////////////////////////////////
+
+
+
+
+//mma.setRange(MMA8451_RANGE_2_G);  //for accelerometer  
+
+ 
+
+  if (! mma.begin()) {
+    digitalWrite(4, HIGH);
+    while(1);
+     digitalWrite(4, LOW);
+
   }
+
+  //test/////////////////////////////////////////////
+  digitalWrite(2, HIGH);
+
+                 delay(500);
+
+                 digitalWrite(2, LOW);
+
+                 delay(1000);
+  //////////////////////////////////////////////////
+
+
 }
+
+ //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
+
 //wait for game to turn on
 
-//read state of ON button
-int ONButton;
-ONButton = digitalRead(powerpin);
-
 //start the game
-if(ONButton == 1){
+//read state of START button and wait until game start is detected
+int startButton = 0;
+while (startButton == 0){
+  startButton = digitalRead(13);
+}
+
+
+//begin the game once the on button is pressed
 
     int mistake = 0; //create a way for loop to end if a mistake is made
-
+ 
+    int check = 0;
     while(mistake == 0){
 
-       int task = random(1, 3);
-       
+          //Randomize the teask
+        int task = random(1, 4);
+        //int task = 2; ///delete me
+        //if (task==2) task = 3;
+
+      
+
        //Press it
-       if(task==1){   
-          
+       if(task==1){     
+
+         //play audio clip saying press it
+      digitalWrite(12, LOW);
+      delay(200);
+      digitalWrite(12, HIGH);       
+      delay(500);
+
           //call press it function
-          int check = pressIt();
-          
+          check = pressIt();
+
+         
+
           if(check == 1){
+
               count++;
-	      
-	      //check if max score is reached
-	      if(count == 99){
-	      	mistake = 1;
-	      }
+
+                    
+
+                     //check if max score is reached
+
+                     if(count == 99){
+
+                              mistake = 1;
+
+                     }
+
           }
-          elseif(check == 0){
+
+          else if(check == 0){
+
               mistake = 1;
+
           }
+
        }
-       
+
+      
+
        //Flip it
-       elseif (task==2){
+
+       else if (task==2){
+
+            //play audio clip saying flip it
+       digitalWrite(5, LOW);
+    delay(200);
+    digitalWrite(5, HIGH);
+    delay(500);
+
            //call flip it function
-          int check = flipIt();
-          
+           check = flipIt();
+
+         
+
           if(check == 1){
+
               count++;
-	      //check if max score is reached
-	      if(count == 99){
-	      	mistake = 1;
-	      }
+
+                     //check if max score is reached
+
+                     if(count == 99){
+
+                              mistake = 1;
+
+                     }
+
           }
-          elseif(check == 0){
+
+          else if(check == 0){
+
               mistake = 1;
+
           }
+
        }
-       
+
+      
+
        //Firmly grasp it
-       elseif (task==3){
+
+       else if (task==3){
+
+         //play audio clip saying grasp it
+       digitalWrite(6, LOW);
+       delay(200);
+        digitalWrite(6, HIGH);
+        delay(500);
+
           //call firmly grasp it function
-          int check = firmlyGraspIt();
-          
+
+           check = firmlyGraspIt();
+
+         
+
           if(check == 1){
+
               count++;
-	      //check if max score is reached
-	      if(count == 99){
-	      	mistake = 1;
-	      }
+
+                     //check if max score is reached
+
+                     if(count == 99){
+
+                              mistake = 1;
+
+                     }
+
           }
-          elseif(check == 0){
+
+          else if(check == 0){
+
               mistake = 1;
+
           }
+
        }
-       
+
+      
+
        //decrement time to perform tasks
+
        maxtime = maxtime - 100;
+
     }
-  
+
+ 
+
   //if this point is reached, either by failure or by maxing out score to 99
-  
+
+ 
+
   if(count == 99){
-  	//play audio clip of spongebob with a congratulatory reading of the 99 score count
-       tmrpcm.setVolume(6);
-       tmrpcm.play("maxscore.wav");
-  ]
-  elseif(count < 99){
-	//play audio clip saying the score reached based on what count variable currently is
-	XXXXXXXXXXXXXXXXXXX
+
+               //play audio clip of spongebob with a congratulatory reading of the 99 score count
+
+       //startPlayback(pianotest, sizeof(pianotest));
+
   }
+
+  else if(count < 99){
+
+               //play audio clip saying the score reached based on what count variable currently is
+
+               //startPlayback(pianotest, sizeof(pianotest));
+
+  }
+
 }
-
-//press it function  (returns 1 for success and 0 for failure)
-pressIt(int success){
-       success = 1;
-       //play audio clip saying press it
-       tmrpcm.setVolume(6);
-       tmrpcm.play("pressit.wav");
-       
-       //Begin countdown
-       long int tstart = millis();
-       
-       //calculate how much time has passed
-       long int tend = millis();
-       long int time = tend - tstart;
-   
-       while(time < maxtime){  //wait for fsr value to change until time is up
-       
-       	int fsrReading = 0;
-       	while(fsrReading == 0){ //read fsr pin until flex is detected
-              	fsrReading = analogRead(fsrAnalogPin);
-		}
-	
-	//recalculate how much time has passed
-	tend = millis();
-        time = tend - tstart;
-	
-	if(fsrReading > 50 && time < maxtime){  //if flex sensor reads good flex and timer is not up: success
-          //Turn green LED on
-          digitalWrite(greenLED, HIGH);
-	  delay(100);
-	  digitalWrite(greenLED, LOW);
-          return success;
-       }
-       elseif(time > maxtime){ //failure
-          digitalWrite(redLED, HIGH);
-	  delay(100);
-	  digitalWrite(redLED, LOW);
-	  success = 0;
-          return success;
-       }
-     }  
-}
-
-//flip it function (returns 1 for success and 0 for failure)
-flipIt(int success){
-    success = 1;
-    //play audio clip saying flip it
-    tmrpcm.setVolume(6);
-    tmrpcm.play("flipit.wav");
-    
-    //Begin countdown
-    long int tstart = millis();
-    
-    long int tend = millis();
-    long int time = tend - tstart;
-    
-    while(time < maxtime){
-        //read accelerometer to detect jerking motion
-        long reading1 = 0;
-        long reading2 = 0;
-        long reading3 = 0;
-    
-	      analogRead(xInput);
-        analogRead(yInput);
-        analogRead(zInput);
-    
-	      delay(1);
-	      for (int i = 0; i < 10; i++){
-	          reading1 += analogRead(xInput);
-            reading2 += analogRead(yInput);
-            reading3 += analogRead(zInput);
-	      }
-        
-	      int xRaw = reading1/sampleSize;
-        int yRaw = reading2/sampleSize;
-        int zRaw = reading3/sampleSize;
-   
-        int avg = (xRaw + yRaw + zRaw)/3;
-   
-   	//recalculate how much time has passed
-        tend = millis();
-        time = tend - tstart;
-    
-        if(avg > 1000 && time < maxtime){ //if accelerometer detects a succesful jerk and time is not up: success
-            digitalWrite(greenLED, HIGH);
-	    delay(100);
-	    digitalWrite(greenLED, LOW);
-            return success;
-        }
-        elseif(time > maxtime){ //failure
-            digitalWrite(redLED, HIGH);
-	    delay(100);
-	    digitalWrite(redLED, LOW);
-            success = 0;
-            return success;
-        }  
- }
-
-//firmly grasp it function (returns 1 for success and 0 for failure)
-firmlyGraspIt(int success){
-    success = 1;
-    //play audio clip saying firmly grasp it
-    tmrpcm.setVolume(6);
-    tmrpcm.play("firmlygraspit.wav");
-
-    //Begin countdown
-    long int tstart = millis();
-
-    long int tend = millis();
-    long int time = tend - tstart;
-
-    while(time < maxtime){
-        //read state of button
-        int buttonState;
-        buttonState = digitalRead(buttonPin);
-        
-	//recalculate how much time has passed
-        tend = millis();
-        time = tend - tstart
-        
-        if(buttonState == HIGH && time < maxtime){ //if handle is firmly grasped and time is not up: success
-            digitalWrite(greenLED, HIGH);
-            return success;
-        }
-        elseif(time > maxtime){ //failure
-            digitalWrite(redLED, HIGH);
-            success = 0;
-            return success;
-        }
-    }
-}
-
-
-///////////////////////////////////////
-
-
-//psuedo code
-//Spatula-It pseudo-code
-//Main(){
-   //While(power == 1){
-  //Read input until game start is signaled;
-  //While(game start == true){
-    //Randomize a number 1-3 and assign it to a variable;
-    //If variable == 1{
-    //call press it function
-//}
-//Otherwise, if variable == 2{
-//call flip it function
-//}
-//Otherwise{
-//call grip it function
-//}
-//If action successful: light green LED and add 1 to total score
-//If action unsuccessful: light red LED and read out total score.
-//}
-//}
-//Press it function(){
-//Play audio clip saying “press it” from speaker
-//If spatula is held in burger press orientation for more than 1.5 sec, return true
-//If action is not completed return false
-//}
-//Flip it function(){
-//Play audio clip saying “flip it” from speaker
-//If accelerometer detects “jerking motion”, return true
-//If action is not completed return false
-//}
-//Grip it function(){
-//Play audio clip saying “grip it” from speaker
-//If the spatulas handle button is pressed, return true
-//If action is not completed return false
-//}
